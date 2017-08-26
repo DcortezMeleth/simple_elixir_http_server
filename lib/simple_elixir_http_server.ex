@@ -36,37 +36,68 @@ defmodule HTTPServer do
 
   defp read_msg(client_socket) do
     :gen_tcp.recv(client_socket, 0)
-    |> handle_response()
+    |> handle_msg(client_socket)
   end
 
-  defp handle_response({:error, reason}) do
-    IO.puts 'Error while reading from socket. Reason: #{reason}'
+  defp handle_msg({:error, reason}, socket) do
+    IO.puts 'Error while receiving message from socker. Error reason: #{reason}'
+    :gen_tcp.close(socket)
+    # handle error and close kill process
   end
 
-  defp handle_response({:ok, data}) do
-    data
-    |> handle_successful_response()
+  defp handle_msg({:ok, {:http_request, :GET, {:abs_path, abs_path}, {1,1}}}, socket) do
+    IO.puts 'Parsing HTTP 1.1 GET request...'
+    IO.puts 'Path: #{abs_path}'
+    
+    [path, params] = abs_path |> to_string |> parse_path()
+    IO.puts "Request path params:"
+    IO.inspect params
+    IO.puts "Splited path:"
+    IO.inspect path
+
+    headers = %{}
+    :gen_tcp.recv(socket, 0)
+    |> handle_header(headers, socket)
   end
 
-  defp handle_successful_response({:http_request, method, {:abs_path, path}, {http_version}}) do
-    IO.puts 'Request START'
-    IO.puts 'Method: #{method}'
-    IO.puts 'Path: #{path}'
-    {major, minor} = http_version
-    IO.puts 'Http version: #{major}.#{minor}'
+  defp parse_path(abs_path) do
+    case String.split(abs_path, "?", trim: :true) do
+      [path, params] ->
+        params_map = String.split(params, "&", trim: :true)
+                     |> parse_params()
+        splited_path = String.split(path, "/", trim: :true)
+        [splited_path, params_map]
+      [path] ->
+        splited_path = String.split(path, "/", trim: :true)
+        [splited_path, %{}]
+    end
+
   end
 
-  defp handle_successful_response({:http_header, sth, header_name, sth2, header_value}) do
-    IO.puts 'Header'
-    IO.puts 'Header name: #{header_name}'
-    IO.puts 'Header value: #{header_value}'
-    IO.puts 'Sth: #{sth}'
-    IO.puts 'Sth2: #{sth2}'
-    IO.puts ''
+  defp parse_params([param|tail]) do
+    [name, value] = String.split(param, "=", trim: :true) 
+    Map.merge(%{name => value}, parse_params(tail))
   end
 
-  defp handle_successful_response(:http_eoh) do
-    IO.puts 'Request END'
-    IO.puts ''
+  defp parse_params([]) do
+    %{}
+  end
+
+  defp handle_header({:error, reason}, _, socket) do
+    IO.puts 'Error while receiving message header part!'
+    :gen_tcp.close(socket)
+    # handle errorand close process
+  end
+
+  defp handle_header({:ok, {:http_header, _, name, _, value}}, headers, socket) do
+    Map.put(headers, name, value)
+    IO.puts 'Header: #{name}\t Value: #{value}' 
+    :gen_tcp.recv(socket, 0)
+    |> handle_header(headers, socket)
+  end
+
+  defp handle_header({:ok, :http_eoh}, headers, _) do
+    IO.puts 'No more headers'
+    headers
   end
 end
