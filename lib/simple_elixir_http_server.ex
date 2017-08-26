@@ -55,9 +55,10 @@ defmodule HTTPServer do
     IO.puts "Splited path:"
     IO.inspect path
 
-    headers = %{}
-    :gen_tcp.recv(socket, 0)
-    |> handle_header(headers, socket)
+    headers = :gen_tcp.recv(socket, 0)
+              |> handle_header(socket)
+
+    IO.inspect headers
   end
 
   defp parse_path(abs_path) do
@@ -76,7 +77,8 @@ defmodule HTTPServer do
 
   defp parse_params([param|tail]) do
     [name, value] = String.split(param, "=", trim: :true) 
-    Map.merge(%{name => value}, parse_params(tail))
+    parse_params(tail)
+    |> Map.merge(%{name => value})
   end
 
   defp parse_params([]) do
@@ -89,15 +91,13 @@ defmodule HTTPServer do
     # handle errorand close process
   end
 
-  defp handle_header({:ok, {:http_header, _, name, _, value}}, headers, socket) do
-    Map.put(headers, name, value)
-    IO.puts 'Header: #{name}\t Value: #{value}' 
+  defp handle_header({:ok, {:http_header, _, name, _, value}}, socket) do
     :gen_tcp.recv(socket, 0)
-    |> handle_header(headers, socket)
+    |> handle_header(socket)
+    |> Map.merge(%{name => value})
   end
 
-  defp handle_header({:ok, :http_eoh}, headers, _) do
-    IO.puts 'No more headers'
-    headers
+  defp handle_header({:ok, :http_eoh}, _) do
+    %{}
   end
 end
