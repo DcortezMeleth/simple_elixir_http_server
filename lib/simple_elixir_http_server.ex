@@ -1,10 +1,6 @@
 defmodule HTTPServer do
   @port 8888
 
-  def hello do
-    :world
-  end
-
   def start do
     IO.puts 'Starting server...'
     :gen_tcp.listen(@port, [:binary, packet: :http, active: false, reuseaddr: true])
@@ -49,7 +45,7 @@ defmodule HTTPServer do
     IO.puts 'Parsing HTTP 1.1 GET request...'
     IO.puts 'Path: #{abs_path}'
     
-    [path, params] = abs_path |> to_string |> parse_path()
+    {path, params} = abs_path |> to_string |> PathParser.parse_path()
     IO.puts "Request path params:"
     IO.inspect params
     IO.puts "Splited path:"
@@ -61,31 +57,7 @@ defmodule HTTPServer do
     IO.inspect headers
   end
 
-  defp parse_path(abs_path) do
-    case String.split(abs_path, "?", trim: :true) do
-      [path, params] ->
-        params_map = String.split(params, "&", trim: :true)
-                     |> parse_params()
-        splited_path = String.split(path, "/", trim: :true)
-        [splited_path, params_map]
-      [path] ->
-        splited_path = String.split(path, "/", trim: :true)
-        [splited_path, %{}]
-    end
-
-  end
-
-  defp parse_params([param|tail]) do
-    [name, value] = String.split(param, "=", trim: :true) 
-    parse_params(tail)
-    |> Map.merge(%{name => value})
-  end
-
-  defp parse_params([]) do
-    %{}
-  end
-
-  defp handle_header({:error, reason}, _, socket) do
+  defp handle_header({:error, reason}, socket) do
     IO.puts 'Error while receiving message header part!'
     :gen_tcp.close(socket)
     # handle errorand close process
