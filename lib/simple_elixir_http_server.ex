@@ -41,6 +41,8 @@ defmodule HTTPServer do
     # handle error and close kill process
   end
 
+  #Handler for HTTP 1.1 GET method.
+  #This method receives request and parses it.
   defp handle_msg({:ok, {:http_request, :GET, {:abs_path, abs_path}, {1,1}}}, socket) do
     IO.puts 'Parsing HTTP 1.1 GET request...'
     IO.puts 'Path: #{abs_path}'
@@ -55,6 +57,31 @@ defmodule HTTPServer do
               |> handle_header(socket)
 
     IO.inspect headers
+  end
+  
+  #Handler for HTTP 1.1 POST method.
+  #This method receives request and parses it.
+  defp handle_msg({:ok, {:http_request, :POST, {:abs_path, abs_path}, {1,1}}}, socket) do
+    IO.puts 'Parsing HTTP 1.1 POST request...'
+    IO.puts 'Path: #{abs_path}'
+    
+    {path, params} = abs_path |> to_string |> PathParser.parse_path()
+    IO.puts "Request path params:"
+    IO.inspect params
+    IO.puts "Splited path:"
+    IO.inspect path
+
+    headers = handle_header(socket)
+
+    IO.inspect headers
+
+    content = :gen_tcp.recv(socket, 0)
+    IO.inspect content
+  end
+
+  defp handle_header(socket) do
+    :gen_tcp.recv(socket, 0)
+    |> handle_header(socket)
   end
 
   defp handle_header({:error, reason}, socket) do

@@ -17,7 +17,7 @@ defmodule PathParser do
     end
   end
 
-  @doc """
+  """
   Gets list of parameters in form of 'a=x' and parses them.
   Returns a map of parameters like {param_name => param_value}
   """
@@ -27,7 +27,7 @@ defmodule PathParser do
     |> Map.merge(%{name => value})
   end
   
-  @doc """
+  """
   Gets list of parameters in form of 'a=x' and parses them.
   Returns a map of parameters like {param_name => param_value}
   """
