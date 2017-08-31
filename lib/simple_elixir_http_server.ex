@@ -53,11 +53,12 @@ defmodule HTTPServer do
     IO.puts "Splited path:"
     IO.inspect path
 
-    headers = :gen_tcp.recv(socket, 0)
-              |> handle_header(socket)
-
+    headers = get_headers(socket)
     IO.inspect headers
+
+    # send response
   end
+
   
   #Handler for HTTP 1.1 POST method.
   #This method receives request and parses it.
@@ -71,21 +72,37 @@ defmodule HTTPServer do
     IO.puts "Splited path:"
     IO.inspect path
 
-    headers = handle_header(socket)
-
+    headers = get_headers(socket)
     IO.inspect headers
 
-    content = :gen_tcp.recv(socket, 0)
-    IO.inspect content
+    %{"Content-Length": len} = headers
+    body = len
+           |> List.to_integer()
+           |> get_body(socket)
   end
 
-  defp handle_header(socket) do
+  defp get_body(len, socket) do
+    :inet.setopts(socket, [packet: :raw])
+    :gen_tcp.recv(socket, len)
+    |> handle_body()
+  end
+
+  defp handle_body({:ok, body}) do
+    IO.inspect body
+    body
+  end
+
+  defp handle_body({:error, reason}) do
+    IO.puts 'Error while receiving message header part! Reason: #{reason}'
+  end
+
+  defp get_headers(socket) do
     :gen_tcp.recv(socket, 0)
     |> handle_header(socket)
   end
 
   defp handle_header({:error, reason}, socket) do
-    IO.puts 'Error while receiving message header part!'
+    IO.puts 'Error while receiving message header part! Reason: #{reason}'
     :gen_tcp.close(socket)
     # handle errorand close process
   end
