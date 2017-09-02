@@ -53,7 +53,7 @@ defmodule HTTPServer do
     IO.puts "Splited path:"
     IO.inspect path
 
-    headers = get_headers(socket)
+    headers = HeaderParser.get_headers(socket)
     IO.inspect headers
 
     # send response
@@ -72,48 +72,12 @@ defmodule HTTPServer do
     IO.puts "Splited path:"
     IO.inspect path
 
-    headers = get_headers(socket)
+    headers = HeaderParser.get_headers(socket)
     IO.inspect headers
 
     %{"Content-Length": len} = headers
     body = len
            |> List.to_integer()
-           |> get_body(socket)
-  end
-
-  defp get_body(len, socket) do
-    :inet.setopts(socket, [packet: :raw])
-    :gen_tcp.recv(socket, len)
-    |> handle_body()
-  end
-
-  defp handle_body({:ok, body}) do
-    IO.inspect body
-    body
-  end
-
-  defp handle_body({:error, reason}) do
-    IO.puts 'Error while receiving message header part! Reason: #{reason}'
-  end
-
-  defp get_headers(socket) do
-    :gen_tcp.recv(socket, 0)
-    |> handle_header(socket)
-  end
-
-  defp handle_header({:error, reason}, socket) do
-    IO.puts 'Error while receiving message header part! Reason: #{reason}'
-    :gen_tcp.close(socket)
-    # handle errorand close process
-  end
-
-  defp handle_header({:ok, {:http_header, _, name, _, value}}, socket) do
-    :gen_tcp.recv(socket, 0)
-    |> handle_header(socket)
-    |> Map.merge(%{name => value})
-  end
-
-  defp handle_header({:ok, :http_eoh}, _) do
-    %{}
+           |> BodyParser.get_body(socket)
   end
 end
