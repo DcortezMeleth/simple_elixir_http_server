@@ -19,7 +19,7 @@ defmodule HTTPServer do
 
   defp loop_accept(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
-    Task.start(fn() -> work(client) end)
+    {:ok, _} = Task.start(fn() -> work(client) end)
     loop_accept(socket)
   end
 

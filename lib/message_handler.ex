@@ -8,8 +8,8 @@ defmodule MessageHandler do
 
   #Handler for HTTP 1.1 GET method.
   #This method receives request and parses it.
-  def handle_msg({:ok, {:http_request, :GET, {:abs_path, abs_path}, {1,1}}}, socket) do
-    IO.puts 'Parsing HTTP 1.1 GET request...'
+  def handle_msg({:ok, {:http_request, http_method, {:abs_path, abs_path}, {1,1}}}, socket) do
+    IO.puts 'Parsing HTTP 1.1 #{http_method} request...'
     IO.puts 'Path: #{abs_path}'
     
     {path, params} = abs_path |> to_string |> PathParser.parse_path
@@ -20,30 +20,11 @@ defmodule MessageHandler do
 
     headers = HeaderParser.get_headers(socket)
     IO.inspect headers
+
+    body = BodyParser.get_body(headers, socket)
 
     # send response
     send_response(socket)
-  end
-
-  #Handler for HTTP 1.1 POST method.
-  #This method receives request and parses it.
-  def handle_msg({:ok, {:http_request, :POST, {:abs_path, abs_path}, {1,1}}}, socket) do
-    IO.puts 'Parsing HTTP 1.1 POST request...'
-    IO.puts 'Path: #{abs_path}'
-    
-    {path, params} = abs_path |> to_string |> PathParser.parse_path
-    IO.puts "Request path params:"
-    IO.inspect params
-    IO.puts "Splited path:"
-    IO.inspect path
-
-    headers = HeaderParser.get_headers(socket)
-    IO.inspect headers
-
-    %{"Content-Length": len} = headers
-    body = len
-           |> List.to_integer()
-           |> BodyParser.get_body(socket)
   end
 
   defp send_response(client_socket) do

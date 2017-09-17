@@ -1,9 +1,14 @@
 defmodule BodyParser do
   
-  def get_body(len, socket) do
+  def get_body(%{:"Content-Lenght" => lenght}, socket) do
+    len = List.to_integer(lenght)
     :inet.setopts(socket, [packet: :raw])
     :gen_tcp.recv(socket, len)
     |> handle_body()
+  end
+
+  def get_body(_, _) do
+    ''
   end
 
   defp handle_body({:ok, body}) do
@@ -12,7 +17,7 @@ defmodule BodyParser do
   end
 
   defp handle_body({:error, reason}) do
-    IO.puts 'Error while receiving message header part! Reason: #{reason}'
+    IO.puts 'Error while reading message body! Reason: #{reason}'
   end
 
 

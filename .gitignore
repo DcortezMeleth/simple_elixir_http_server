@@ -21,3 +21,6 @@ erl_crash.dump
 
 # Dont commit swap files
 *.swp
+
+# htdocs folder shouldn't be commited
+/htdocs/
