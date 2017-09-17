@@ -1,5 +1,7 @@
 defmodule MessageHandler do
   
+  @version Mix.Project.config[:version]
+  
   def handle_msg({:error, reason}, socket) do
     IO.puts 'Error while receiving message from socket. Error reason: #{reason}'
     :gen_tcp.close(socket)
@@ -49,7 +51,7 @@ defmodule MessageHandler do
 
   defp get_base_headers_as_string(content_length) do
     date = current_date()
-    ['Date: #{date}\r\n', 'Server: SimpleElixirHttpServer/0.0.1\r\n', 'Last-Modified: #{date}\r\n', 'Content-Length: #{content_length}\r\n', 'Connection: close\r\n', 'Content-type: text/html;\r\n', 'Cache-Control: no-cache\r\n']
+    ['Date: #{date}\r\n', 'Server: SimpleElixirHttpServer/#{@version}\r\n', 'Last-Modified: #{date}\r\n', 'Content-Length: #{content_length}\r\n', 'Connection: close\r\n', 'Content-type: text/html;\r\n', 'Cache-Control: no-cache\r\n']
     |> Enum.join("")
   end
 
