@@ -1,12 +1,24 @@
 defmodule Handlers do
 
   def handle(:GET, path, _, _) do
-    case ["htdocs" | path] |> Enum.join("/") |> File.read do
-      {:ok, content} -> {200, %{}, content}
-      {:error, :eaccess} -> {401, %{}, "<html><body>401 Unauthorized</body></html>"}
-      {:error, :enoent} -> {404, %{}, "<html><body>404 Not Found</body></html>"}
-      {:error, :enomem} -> {500, %{}, "<html><body>500 File too larg</body></html>"}
-      {:error, _} -> {400, %{}, "<html><body>400 Bad Request</body></html>"}
+    file_path = ["htdocs" | path] 
+                |> Enum.join("/") 
+    case file_path |> File.read do
+      {:ok, content} ->
+        mdate = file_path
+        |> File.stat!([])
+        |> Map.get(:mtime)
+        |> Timex.to_datetime
+        |> Timex.format!("{RFC1123}")
+        {200, %{'Last-Modified' => mdate}, content}
+      {:error, :eaccess} -> 
+        {401, %{}, "<html><body>401 Unauthorized</body></html>"}
+      {:error, :enoent} -> 
+        {404, %{}, "<html><body>404 Not Found</body></html>"}
+      {:error, :enomem} -> 
+        {500, %{}, "<html><body>500 File too larg</body></html>"}
+      {:error, _} -> 
+        {400, %{}, "<html><body>400 Bad Request</body></html>"}
     end
   end
   

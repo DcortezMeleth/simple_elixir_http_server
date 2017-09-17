@@ -51,7 +51,7 @@ defmodule MessageHandler do
 
   defp get_base_headers_as_string(content_length, headers) do
     date = current_date()
-    %{'Date' => '#{date}', 'Server' => 'SimpleElixirHttpServer/#{@version}', 'Last-Modified' => '#{date}', 'Content-Length' => '#{content_length}', 'Connection' => 'close', 'Content-type' => 'text/html;', 'Cache-Control' => 'no-cache'}
+    %{'Date' => '#{date}', 'Server' => 'SimpleElixirHttpServer/#{@version}', 'Content-Length' => '#{content_length}', 'Connection' => 'close', 'Content-type' => 'text/html;', 'Cache-Control' => 'no-cache'}
     |> Map.merge(headers) 
     |> Enum.reduce("", fn({k,v}, acc) -> Enum.join([acc, k, ": ", v, "\r\n"]) end)
   end
