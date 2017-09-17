@@ -29,13 +29,13 @@ defmodule MessageHandler do
     |> send_response(socket)
   end
 
-  defp send_response({status_code, content}, client_socket) do
+  defp send_response({status_code, headers, content}, client_socket) do
     IO.puts 'Sending response ...'
     http_version = 'HTTP/1.1'
     http_status = get_status_by_code(status_code)
-    headers = String.length(content)
-              |> get_base_headers_as_string()
-    response = '#{http_version} #{http_status}#{headers}\r\n#{content}\r\n'
+    headers_string = String.length(content)
+              |> get_base_headers_as_string(headers)
+    response = '#{http_version} #{http_status}#{headers_string}\r\n#{content}\r\n'
     IO.puts response
     :inet.setopts(client_socket, [packet: :http])
     res = {:http_respone, {1,1}, response}
@@ -49,10 +49,11 @@ defmodule MessageHandler do
     date
   end
 
-  defp get_base_headers_as_string(content_length) do
+  defp get_base_headers_as_string(content_length, headers) do
     date = current_date()
-    ['Date: #{date}\r\n', 'Server: SimpleElixirHttpServer/#{@version}\r\n', 'Last-Modified: #{date}\r\n', 'Content-Length: #{content_length}\r\n', 'Connection: close\r\n', 'Content-type: text/html;\r\n', 'Cache-Control: no-cache\r\n']
-    |> Enum.join("")
+    %{'Date' => '#{date}', 'Server' => 'SimpleElixirHttpServer/#{@version}', 'Last-Modified' => '#{date}', 'Content-Length' => '#{content_length}', 'Connection' => 'close', 'Content-type' => 'text/html;', 'Cache-Control' => 'no-cache'}
+    |> Map.merge(headers) 
+    |> Enum.reduce("", fn({k,v}, acc) -> Enum.join([acc, k, ": ", v, "\r\n"]) end)
   end
 
   defp get_status_by_code(status_code) do
