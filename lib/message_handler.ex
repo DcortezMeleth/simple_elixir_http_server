@@ -23,14 +23,14 @@ defmodule MessageHandler do
 
     body = BodyParser.get_body(headers, socket)
 
-    # send response
-    send_response(socket)
+    Handlers.handle(http_method, path, params, body)
+    |> send_response(socket)
   end
 
-  defp send_response(client_socket) do
+  defp send_response({status_code, content}, client_socket) do
+    IO.puts 'Sending response ...'
     http_version = 'HTTP/1.1'
-    http_status = '200 OK\r\n'
-    content = "<html><body>Hello World!</body></html>"
+    http_status = get_status_by_code(status_code)
     headers = String.length(content)
               |> get_base_headers_as_string()
     response = '#{http_version} #{http_status}#{headers}\r\n#{content}\r\n'
@@ -51,5 +51,16 @@ defmodule MessageHandler do
     date = current_date()
     ['Date: #{date}\r\n', 'Server: SimpleElixirHttpServer/0.0.1\r\n', 'Last-Modified: #{date}\r\n', 'Content-Length: #{content_length}\r\n', 'Connection: close\r\n', 'Content-type: text/html;\r\n', 'Cache-Control: no-cache\r\n']
     |> Enum.join("")
+  end
+
+  defp get_status_by_code(status_code) do
+    statuses = %{200 => 'OK', 
+      201 => 'Created', 
+      202 => 'Accepted', 
+      400 => 'Bad Request', 
+      401 => 'Unauthorized', 
+      404 => 'Not Found', 
+      500 => 'Internal Error'}
+    '#{status_code} #{statuses[status_code]}\r\n'
   end
 end
