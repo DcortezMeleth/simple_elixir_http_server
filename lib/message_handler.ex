@@ -25,8 +25,14 @@ defmodule MessageHandler do
 
     body = BodyParser.get_body(headers, socket)
 
-    Handlers.handle(http_method, path, params, body)
-    |> send_response(socket)
+    case Validators.validate(headers, body) do
+      true ->
+        Handlers.handle(http_method, path, params, body)
+        |> send_response(socket)
+      false ->
+        {400, %{}, 'Bad request!'}
+        |> send_response(socket)
+    end
   end
 
   defp send_response({status_code, headers, content}, client_socket) do
@@ -43,14 +49,9 @@ defmodule MessageHandler do
     |> :gen_tcp.send(response)
   end
 
-  defp current_date() do
-    {:ok, date} = Timex.now("Europe/Warsaw")
-                  |> Timex.format("{RFC1123}")
-    date
-  end
-
   defp get_base_headers_as_string(content_length, headers) do
-    date = current_date()
+    date = Timex.now("Europe/Warsaw")
+           |> Timex.format!("{RFC1123}")
     %{'Date' => '#{date}', 'Server' => 'SimpleElixirHttpServer/#{@version}', 'Content-Length' => '#{content_length}', 'Connection' => 'close', 'Content-type' => 'text/html;', 'Cache-Control' => 'no-cache'}
     |> Map.merge(headers) 
     |> Enum.reduce("", fn({k,v}, acc) -> Enum.join([acc, k, ": ", v, "\r\n"]) end)
