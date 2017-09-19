@@ -5,33 +5,34 @@ defmodule PathParser do
   and map of query parameters as second element.
   """
   def parse_path(abs_path) do
-    case String.split(abs_path, "?", trim: :true) do
-      [path, params] ->
-        params_map = String.split(params, "&", trim: :true)
-                     |> parse_params()
-        splited_path = String.split(path, "/", trim: :true)
-        {splited_path, params_map}
-      [path] ->
-        splited_path = String.split(path, "/", trim: :true)
-        {splited_path, %{}}
-    end
+    splited_path = abs_path
+                   |> URI.parse
+                   |> Map.get(:path)
+                   |> String.split("/", trim: :true)
+
+    params = abs_path
+             |> URI.parse
+             |> Map.get(:query)
+             |> parse_params()
+
+    {splited_path, params}
   end
 
   """
   Gets list of parameters in form of 'a=x' and parses them.
   Returns a map of parameters like {param_name => param_value}
   """
-  defp parse_params([param|tail]) do
-    [name, value] = String.split(param, "=", trim: :true) 
-    parse_params(tail)
-    |> Map.merge(%{name => value})
+  defp parse_params(query) when is_bitstring(query) do
+    query
+    |> URI.query_decoder
+    |> Enum.into(%{})
   end
   
   """
   Gets list of parameters in form of 'a=x' and parses them.
   Returns a map of parameters like {param_name => param_value}
   """
-  defp parse_params([]) do
+  defp parse_params(query) do
     %{}
   end
 

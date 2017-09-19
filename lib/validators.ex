@@ -1,7 +1,7 @@
 defmodule Validators do
 
   def validate(headers, body) do 
-    [&Validators.validate_host_header/2]
+    [&validate_host_header/2]
     |> Enum.reduce(true, &(&1.(headers, body) and &2))
   end
 
