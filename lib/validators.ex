@@ -1,15 +1,18 @@
 defmodule Validators do
 
+  @doc """
+  Validates request against set of conditions in form of functions defined in this module.
+  """
   def validate(headers, body) do 
     [&validate_host_header/2]
     |> Enum.reduce(true, &(&1.(headers, body) and &2))
   end
 
-  def validate_host_header(%{:'Host' => _}, _) do
+  defp validate_host_header(%{:'Host' => _}, _) do
     true
   end
 
-  def validate_host_header(_, _) do
+  defp validate_host_header(_, _) do
     false
   end
 
