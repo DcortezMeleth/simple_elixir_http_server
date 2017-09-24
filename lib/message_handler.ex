@@ -27,7 +27,7 @@ defmodule MessageHandler do
 
     case Validators.validate(headers, body) do
       true ->
-        Handlers.handle(http_method, path, params, body)
+        Handlers.handle(http_method, path, headers, params, body)
         |> send_response(socket)
       false ->
         {400, %{}, 'Bad request!'}

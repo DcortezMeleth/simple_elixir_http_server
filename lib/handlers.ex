@@ -1,15 +1,21 @@
 defmodule Handlers do
 
-  def handle(:GET, path, _, _) do
-    file_path = ["htdocs" | path] 
-                |> Enum.join("/") 
+  def handle(:GET, path, %{:"If-Modified-Since" => since}, _, _) do
+    mdate = path 
+            |> get_file_path
+            |> get_modification_date
+    since_date = since
+                 |> DateUtils.parse_date
+  end
+
+  def handle(:GET, path, _, _, _) do
+    file_path = path 
+                |> get_file_path 
     case file_path |> File.read do
       {:ok, content} ->
         mdate = file_path
-        |> File.stat!([])
-        |> Map.get(:mtime)
-        |> Timex.to_datetime
-        |> Timex.format!("{RFC1123}")
+                |> get_modification_date
+                |> Timex.format!("{RFC1123}")
         {200, %{'Last-Modified' => mdate}, content}
       {:error, :eaccess} -> 
         {401, %{}, "<html><body>401 Unauthorized</body></html>"}
@@ -22,13 +28,26 @@ defmodule Handlers do
     end
   end
   
-  def handle(http_method, path, params, body) do
+  def handle(http_method, path, headers, params, body) do
     IO.puts 'Default method'
     IO.inspect http_method
     IO.inspect path
+    IO.inspect headers
     IO.inspect params
     IO.inspect body
     {200, %{}, "<html><body>SimpleHTTPServer/0.0.1!</body></html>"}
+  end
+
+  defp get_file_path(path) do
+    ["htdocs" | path] 
+    |> Enum.join("/") 
+  end
+
+  defp get_modification_date(file_path) do
+    file_path
+    |> File.stat!([])
+    |> Map.get(:mtime)
+    |> Timex.to_datetime
   end
 
 end
