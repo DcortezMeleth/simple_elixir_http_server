@@ -8,11 +8,11 @@ defmodule ValidatorsTest do
   end
 
   test "should pass validation", context do
-    assert Validators.validate(context[:valid_headers], "") == true
+    assert Validators.valid?(context[:valid_headers], "") == true
   end
 
   test "should not pass host header validation", context do
-    assert Validators.validate(context[:invalid_headers], "") == false
+    assert Validators.valid?(context[:invalid_headers], "") == false
   end
 
 end

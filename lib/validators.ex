@@ -3,7 +3,7 @@ defmodule Validators do
   @doc """
   Validates request against set of conditions in form of functions defined in this module.
   """
-  def validate(headers, body) do 
+  def valid?(headers, body) do 
     [&validate_host_header/2]
     |> Enum.reduce(true, &(&1.(headers, body) and &2))
   end

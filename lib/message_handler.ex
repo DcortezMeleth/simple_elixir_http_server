@@ -8,7 +8,7 @@ defmodule MessageHandler do
     # handle error and close kill process
   end
 
-  #Handler for HTTP 1.1 GET method.
+  #Handler for HTTP 1.1 method.
   #This method receives request and parses it.
   def handle_msg({:ok, {:http_request, http_method, {:abs_path, abs_path}, {1,1}}}, socket) do
     IO.puts 'Parsing HTTP 1.1 #{http_method} request...'
@@ -25,7 +25,7 @@ defmodule MessageHandler do
 
     body = BodyParser.get_body(headers, socket)
 
-    case Validators.validate(headers, body) do
+    case Validators.valid?(headers, body) do
       true ->
         Handlers.handle(http_method, path, headers, params, body)
         |> send_response(socket)

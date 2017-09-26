@@ -2,10 +2,10 @@ defmodule Handlers do
 
   def handle(:GET, path, headers = %{:"If-Modified-Since" => since}, p, b) do
     since_date = since
-                 |> DateUtils.parse_date
+                 |> Utils.DateUtils.parse_date
     mdate = path
-    |> FileUtils.get_file_path
-    |> FileUtils.get_file_modification_date
+    |> Utils.FileUtils.get_file_path
+    |> Utils.FileUtils.get_file_modification_date
     |> Timex.before?(since_date)    
     |> case do
       # File modified since `If-Modified-Since`, we handle request as normal
@@ -19,11 +19,11 @@ defmodule Handlers do
 
   def handle(:GET, path, _, _, _) do
     file_path = path 
-                |> FileUtils.get_file_path 
+                |> Utils.FileUtils.get_file_path 
     case file_path |> File.read do
       {:ok, content} ->
         mdate = file_path
-                |> FileUtils.get_file_modification_date
+                |> Utils.FileUtils.get_file_modification_date
                 |> Timex.format!("{RFC1123}")
         {200, %{'Last-Modified' => mdate}, content}
       {:error, :eaccess} -> 

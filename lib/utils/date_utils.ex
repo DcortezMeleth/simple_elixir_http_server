@@ -1,26 +1,26 @@
-defmodule DateUtils do
+defmodule Utils.DateUtils do
 
   @doc ~S"""
   Parses string with date into date obejct. Accepts dates in formats possible in http message headers. If date is not parsable current date is returned.
 
   ## Examples
 
-      iex> DateUtils.parse_date("Fri, 8 Dec 2017 23:59:59 GMT")
+      iex> Utils.DateUtils.parse_date("Fri, 8 Dec 2017 23:59:59 GMT")
       #DateTime<2017-12-08 23:59:59Z>
 
-      iex> DateUtils.parse_date("Friday, 8-Dec-17 23:59:59 GMT")
+      iex> Utils.DateUtils.parse_date("Friday, 8-Dec-17 23:59:59 GMT")
       #DateTime<2017-12-08 23:59:59Z>
 
-      iex> DateUtils.parse_date("Fri Dec 8 23:59:59 2017")
+      iex> Utils.DateUtils.parse_date("Fri Dec 8 23:59:59 2017")
       #DateTime<2017-12-08 23:59:59Z>
 
-      iex> DateUtils.parse_date('Fri, 8 Dec 2017 23:59:59 GMT')
+      iex> Utils.DateUtils.parse_date('Fri, 8 Dec 2017 23:59:59 GMT')
       #DateTime<2017-12-08 23:59:59Z>
 
-      iex> DateUtils.parse_date('Friday, 8-Dec-17 23:59:59 GMT')
+      iex> Utils.DateUtils.parse_date('Friday, 8-Dec-17 23:59:59 GMT')
       #DateTime<2017-12-08 23:59:59Z>
 
-      iex> DateUtils.parse_date('Fri Dec 8 23:59:59 2017')
+      iex> Utils.DateUtils.parse_date('Fri Dec 8 23:59:59 2017')
       #DateTime<2017-12-08 23:59:59Z>
   """
   def parse_date(date) do

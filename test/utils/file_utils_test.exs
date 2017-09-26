@@ -1,4 +1,4 @@
 defmodule FileUtilsTest do
   use ExUnit.Case
-  doctest FileUtils
+  doctest Utils.FileUtils
 end
