@@ -65,6 +65,7 @@ defmodule MessageHandler do
       400 => 'Bad Request', 
       401 => 'Unauthorized', 
       404 => 'Not Found', 
+      412 => 'Precondition Failed',
       500 => 'Internal Error'}
     '#{status_code} #{statuses[status_code]}\r\n'
   end

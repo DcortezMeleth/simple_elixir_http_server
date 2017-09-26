@@ -17,6 +17,23 @@ defmodule Handlers do
     end
   end
 
+  def handle(method, path, headers = %{:"If-Unmodified-Since" => since}, p, b) do
+    since_date = since
+                 |> Utils.DateUtils.parse_date
+    mdate = path
+    |> Utils.FileUtils.get_file_path
+    |> Utils.FileUtils.get_file_modification_date
+    |> Timex.before?(since_date)    
+    |> case do
+      # File unmodified since `If-Modified-Since`, we handle request as normal
+      true -> 
+        handle(method, path, headers |> Map.delete(:"If-Unmodified-Since"), p, b)
+      # File modified, returning 304
+      false -> 
+        {412, %{}, "<html><body>412 Precondition Failed!</body></html>"}
+    end
+  end
+
   def handle(:GET, path, _, _, _) do
     file_path = path 
                 |> Utils.FileUtils.get_file_path 
