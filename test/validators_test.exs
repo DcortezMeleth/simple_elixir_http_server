@@ -3,16 +3,26 @@ defmodule ValidatorsTest do
   doctest Validators
 
   setup _context do
-    {:ok, [valid_headers: %{:"Host" => "http://localhost:8888"},
-           invalid_headers: %{}]}
+    {:ok, [get_valid_headers: %{:'Host' => "http://localhost:8888"},
+           get_invalid_headers: %{},
+           post_valid_headers: %{:'Host' => "http://localhost:8888", :'Content-Length' => 16},
+           post_invalid_headers: %{:"Host" => "http://localhost:8888"}]}
   end
 
-  test "should pass validation", context do
-    assert Validators.valid?(context[:valid_headers], "") == true
+  test "GET should pass validation", context do
+    assert Validators.valid?(:GET, context[:get_valid_headers], "") == true
   end
 
-  test "should not pass host header validation", context do
-    assert Validators.valid?(context[:invalid_headers], "") == false
+  test "GET should not pass host header validation", context do
+    assert Validators.valid?(:GET, context[:get_invalid_headers], "") == false
+  end
+
+  test "POST should pass validation", context do
+    assert Validators.valid?(:POST, context[:post_valid_headers], "") == true
+  end
+
+  test "POST should not pass host header validation", context do
+    assert Validators.valid?(:POST, context[:post_invalid_headers], "") == false
   end
 
 end
