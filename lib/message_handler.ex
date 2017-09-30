@@ -24,10 +24,12 @@ defmodule MessageHandler do
     IO.inspect headers
 
     body = BodyParser.get_body(headers, socket)
+    request = %Request{http_method: http_method, headers: headers, path: path, body: body, params: params}
 
-    case Validators.valid?(http_method, headers, body) do
+    case request |> Validators.valid? do
       true ->
-        Handlers.handle(http_method, path, headers, params, body)
+        request
+        |> Handlers.handle
         |> send_response(socket)
       false ->
         {400, %{}, 'Bad request!'}

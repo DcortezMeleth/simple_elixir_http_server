@@ -1,31 +1,35 @@
 defmodule Handlers do
 
-  def handle(:GET, path, headers = %{:"If-Modified-Since" => since}, p, b) do
-    modified_since?(path, since)
+  def handle(request = %Request{http_method: :GET, headers: %{:"If-Modified-Since" => since}}) do
+    modified_since?(request.path, since)
     |> case do
       # File modified since `If-Modified-Since`, we handle request as normal
       false -> 
-        handle(:GET, path, headers |> Map.delete(:"If-Modified-Since"), p, b)
+        new_headers = Map.delete(request.headers, :"If-Modified-Since")
+        Map.put(request, :headers, new_headers)
+        |> handle
       # File unmodified, returning 304
       true -> 
         {304, %{}, "<html><body>304 Not Modifed</body></html>"}
     end
   end
   
-  def handle(method, path, headers = %{:"If-Unmodified-Since" => since}, p, b) do
-    modified_since?(path, since)    
+  def handle(request = %Request{headers: %{:"If-Unmodified-Since" => since}}) do
+    modified_since?(request.path, since)    
     |> case do
       # File unmodified since `If-Modified-Since`, we handle request as normal
       true -> 
-        handle(method, path, headers |> Map.delete(:"If-Unmodified-Since"), p, b)
+        new_headers = Map.delete(request.headers, :"If-Unmodified-Since")
+        Map.put(request, :headers, new_headers)
+        |> handle
         # File modified, returning 304
       false -> 
         {412, %{}, "<html><body>412 Precondition Failed!</body></html>"}
     end
   end
 
-  def handle(:GET, path, _, _, _) do
-    file_path = path 
+  def handle(request = %Request{http_method: :GET}) do
+    file_path = request.path 
                 |> Utils.FileUtils.get_file_path 
     case file_path |> File.read do
       {:ok, content} ->
@@ -44,13 +48,13 @@ defmodule Handlers do
     end
   end
   
-  def handle(http_method, path, headers, params, body) do
+  def handle(request) do
     IO.puts 'Default method'
-    IO.inspect http_method
-    IO.inspect path
-    IO.inspect headers
-    IO.inspect params
-    IO.inspect body
+    IO.inspect request.http_method
+    IO.inspect request.path
+    IO.inspect request.headers
+    IO.inspect request.params
+    IO.inspect request.body
     {200, %{}, "<html><body>SimpleHTTPServer/0.0.1!</body></html>"}
   end
 

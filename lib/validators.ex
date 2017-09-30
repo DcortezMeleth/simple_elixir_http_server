@@ -3,18 +3,18 @@ defmodule Validators do
   @doc """
   Validates request against set of conditions in form of functions defined in this module.
   """
-  def valid?(http_method, headers, body) do 
-    [&validate_host_header/3, &validate_content_length/3]
-    |> Enum.reduce(true, &(&1.(http_method, headers, body) and &2))
+  def valid?(request) do 
+    [&validate_host_header/1, &validate_content_length/1]
+    |> Enum.reduce(true, &(&1.(request) and &2))
   end
 
-  defp validate_host_header(_, %{:'Host' => _}, _), do: true
-  defp validate_host_header(_, _, _), do: false
+  defp validate_host_header(%Request{headers: %{:'Host' => _}}), do: true
+  defp validate_host_header(_), do: false
 
-  defp validate_content_length(:POST, %{:'Content-Length' => _}, _), do: true
-  defp validate_content_length(:POST, _, _), do: false
-  defp validate_content_length(:PUT, %{:'Content-Length' => _}, _), do: true
-  defp validate_content_length(:PUT, _, _), do: false
-  defp validate_content_length(_, _, _), do: true
+  defp validate_content_length(%Request{http_method: :POST, headers: %{:'Content-Length' => _}}), do: true
+  defp validate_content_length(%Request{http_method: :POST}), do: false
+  defp validate_content_length(%Request{http_method: :PUT, headers: %{:'Content-Length' => _}}), do: true
+  defp validate_content_length(%Request{http_method: :PUT}), do: false
+  defp validate_content_length(_), do: true
 
 end
