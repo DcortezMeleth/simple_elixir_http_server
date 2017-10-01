@@ -37,13 +37,13 @@ defmodule MessageHandler do
     end
   end
 
-  defp send_response({status_code, headers, content}, client_socket) do
+  defp send_response(request, client_socket) do
     IO.puts 'Sending response ...'
     http_version = 'HTTP/1.1'
-    http_status = get_status_by_code(status_code)
-    headers_string = String.length(content)
-              |> get_base_headers_as_string(headers)
-    response = '#{http_version} #{http_status}#{headers_string}\r\n#{content}\r\n'
+    http_status = get_status_by_code(request.http_status)
+    headers_string = String.length(request.body)
+              |> get_base_headers_as_string(request.headers)
+    response = '#{http_version} #{http_status}#{headers_string}\r\n#{request.body}\r\n'
     IO.puts response
     :inet.setopts(client_socket, [packet: :http])
     res = {:http_respone, {1,1}, response}

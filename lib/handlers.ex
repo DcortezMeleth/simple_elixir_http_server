@@ -10,7 +10,7 @@ defmodule Handlers do
         |> handle
       # File unmodified, returning 304
       true -> 
-        {304, %{}, "<html><body>304 Not Modifed</body></html>"}
+        %Response{http_status: 304, body: "<html><body>304 Not Modifed</body></html>"}
     end
   end
   
@@ -24,27 +24,27 @@ defmodule Handlers do
         |> handle
         # File modified, returning 304
       false -> 
-        {412, %{}, "<html><body>412 Precondition Failed!</body></html>"}
+        %Response{http_status: 412, body: "<html><body>412 Precondition Failed!</body></html>"}
     end
   end
 
-  def handle(request = %Request{http_method: :GET}) do
-    file_path = request.path 
+  def handle(%Request{http_method: :GET, path: path}) do
+    file_path = path 
                 |> Utils.FileUtils.get_file_path 
     case file_path |> File.read do
       {:ok, content} ->
         mdate = file_path
         |> Utils.FileUtils.get_file_modification_date
         |> Timex.format!("{RFC1123}")
-        {200, %{'Last-Modified' => mdate}, content}
+        %Response{http_status: 200, headers: %{'Last-Modified' => mdate}, body: content}
       {:error, :eaccess} -> 
-        {401, %{}, "<html><body>401 Unauthorized</body></html>"}
+        %Response{http_status: 401, body: "<html><body>401 Unauthorized</body></html>"}
       {:error, :enoent} -> 
-        {404, %{}, "<html><body>404 Not Found</body></html>"}
+        %Response{http_status: 404, body: "<html><body>404 Not Found</body></html>"}
       {:error, :enomem} -> 
-        {500, %{}, "<html><body>500 File too large</body></html>"}
+        %Response{http_status: 500, body: "<html><body>500 File too large</body></html>"}
       {:error, _} -> 
-        {400, %{}, "<html><body>400 Bad Request</body></html>"}
+        %Response{http_status: 400, body: "<html><body>400 Bad Request</body></html>"}
     end
   end
   
@@ -55,16 +55,16 @@ defmodule Handlers do
     IO.inspect request.headers
     IO.inspect request.params
     IO.inspect request.body
-    {200, %{}, "<html><body>SimpleHTTPServer/0.0.1!</body></html>"}
+    %Response{http_status: 200, body: "<html><body>SimpleHTTPServer/0.0.1!</body></html>"}
   end
 
   defp modified_since?(file_path, since) do
     since_date = since
                   |> Utils.DateUtils.parse_date
-    mdate = file_path
-            |> Utils.FileUtils.get_file_path
-            |> Utils.FileUtils.get_file_modification_date
-            |> Timex.before?(since_date) 
+    file_path
+    |> Utils.FileUtils.get_file_path
+    |> Utils.FileUtils.get_file_modification_date
+    |> Timex.before?(since_date) 
   end
   
 end
