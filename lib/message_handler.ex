@@ -40,7 +40,7 @@ defmodule MessageHandler do
   defp send_response(request, client_socket) do
     IO.puts 'Sending response ...'
     http_version = 'HTTP/1.1'
-    http_status = get_status_by_code(request.http_status)
+    http_status = Utils.HttpStatuses.get_status_by_code(request.http_status)
     headers_string = String.length(request.body)
               |> get_base_headers_as_string(request.headers)
     response = '#{http_version} #{http_status}#{headers_string}\r\n#{request.body}\r\n'
@@ -59,16 +59,4 @@ defmodule MessageHandler do
     |> Enum.reduce("", fn({k,v}, acc) -> Enum.join([acc, k, ": ", v, "\r\n"]) end)
   end
 
-  defp get_status_by_code(status_code) do
-    statuses = %{200 => 'OK', 
-      201 => 'Created', 
-      202 => 'Accepted', 
-      304 => 'Not Modified',
-      400 => 'Bad Request', 
-      401 => 'Unauthorized', 
-      404 => 'Not Found', 
-      412 => 'Precondition Failed',
-      500 => 'Internal Error'}
-    '#{status_code} #{statuses[status_code]}\r\n'
-  end
 end
