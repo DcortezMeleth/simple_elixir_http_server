@@ -34,9 +34,14 @@ defmodule Handlers do
     case file_path |> File.read do
       {:ok, content} ->
         mdate = file_path
-        |> Utils.FileUtils.get_file_modification_date
-        |> Timex.format!("{RFC1123}")
-        %Response{http_status: 200, headers: %{'Last-Modified' => mdate}, body: content}
+                |> Utils.FileUtils.get_file_modification_date
+                |> Timex.format!("{RFC1123}")
+
+        headers = content
+                  |> String.length
+                  |> Utils.HeaderUtils.get_content_length_header
+                  |> Map.merge(%{'Last-Modified' => mdate})
+        %Response{http_status: 200, headers: headers, body: content}
       {:error, :eaccess} -> 
         %Response{http_status: 401, body: "<html><body>401 Unauthorized</body></html>"}
       {:error, :enoent} -> 

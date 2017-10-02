@@ -1,7 +1,5 @@
 defmodule MessageHandler do
   
-  @version Mix.Project.config[:version]
-  
   def handle_msg({:error, reason}, socket) do
     IO.puts 'Error while receiving message from socket. Error reason: #{reason}'
     :gen_tcp.close(socket)
@@ -41,8 +39,11 @@ defmodule MessageHandler do
     IO.puts 'Sending response ...'
     http_version = 'HTTP/1.1'
     http_status = Utils.HttpStatuses.get_status_by_code(request.http_status)
-    headers_string = String.length(request.body)
-              |> get_base_headers_as_string(request.headers)
+    headers_string = request.headers
+                     |> Utils.HeaderUtils.merge_base_headers
+                     |> Utils.HeaderUtils.headers_to_string
+              #String.length(request.body)
+              #|> get_base_headers_as_string(request.headers)
     response = '#{http_version} #{http_status}#{headers_string}\r\n#{request.body}\r\n'
     IO.puts response
     :inet.setopts(client_socket, [packet: :http])
@@ -50,13 +51,4 @@ defmodule MessageHandler do
     client_socket
     |> :gen_tcp.send(response)
   end
-
-  defp get_base_headers_as_string(content_length, headers) do
-    date = Timex.now("Europe/Warsaw")
-           |> Timex.format!("{RFC1123}")
-    %{'Date' => '#{date}', 'Server' => 'SimpleElixirHttpServer/#{@version}', 'Content-Length' => '#{content_length}', 'Connection' => 'close', 'Content-type' => 'text/html;', 'Cache-Control' => 'no-cache'}
-    |> Map.merge(headers) 
-    |> Enum.reduce("", fn({k,v}, acc) -> Enum.join([acc, k, ": ", v, "\r\n"]) end)
-  end
-
 end

@@ -44,4 +44,8 @@ defmodule Utils.DateUtils do
     end |> Timex.to_datetime
   end
 
+  def current_date do
+    Timex.now("Europe/Warsaw")
+    |> Timex.format!("{RFC1123}")
+  end
 end
