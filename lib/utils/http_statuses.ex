@@ -20,14 +20,14 @@ defmodule Utils.HttpStatuses do
   end
 
   defp status_codes do
-    statuses = 
       %{200 => 'OK', 
       201 => 'Created', 
       202 => 'Accepted', 
       304 => 'Not Modified',
       400 => 'Bad Request', 
       401 => 'Unauthorized', 
-      404 => 'Not Found', 
+      404 => 'Not Found',
+      411 => 'Length Required', 
       412 => 'Precondition Failed',
       500 => 'Internal Error'}
   end

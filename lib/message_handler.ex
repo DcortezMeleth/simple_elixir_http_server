@@ -25,12 +25,12 @@ defmodule MessageHandler do
     request = %Request{http_method: http_method, headers: headers, path: path, body: body, params: params}
 
     case request |> Validators.valid? do
-      true ->
+      {:done, true} ->
         request
         |> Handlers.handle
         |> send_response(socket)
-      false ->
-        {400, %{}, 'Bad request!'}
+      {:halted, response} ->
+        response
         |> send_response(socket)
     end
   end
