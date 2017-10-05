@@ -49,14 +49,9 @@ defmodule Handlers do
     end
   end
 
-  def handle(%Request{http_method: :POST, path: path, params: %{"filename" => filename}, body: body}) do
-    file_path = path 
-                |> Utils.FileUtils.get_file_path
-    file_path
-    |> File.mkdir_p
-
-    "#{file_path}/#{filename}"
-    |> File.write(body)
+  def handle(request = %Request{http_method: :POST, params: %{"filename" => _}}) do
+    request
+    |> handle_save
     |> case do
       :ok ->
         %Response{http_status: 201}
@@ -70,6 +65,31 @@ defmodule Handlers do
         %Response{http_status: 400, body: "<html><body>400 Filename is directory</body></html>"}
     end
   end
+
+  def handle(request = %Request{http_method: :PUT, params: %{"filename" => _}}) do
+    request
+    |> handle_save
+    |> case do
+      :ok ->
+        %Response{http_status: 200}
+      {:error, :eaccess} -> 
+        %Response{http_status: 401, body: "<html><body>401 Unauthorized</body></html>"}
+      {:error, :enoent} -> 
+        %Response{http_status: 400, body: "<html><body>400 Wrong Path</body></html>"}
+      {:error, :enospc} -> 
+        %Response{http_status: 500, body: "<html><body>500 No space left on drive</body></html>"}
+      {:error, :eisdir} -> 
+        %Response{http_status: 400, body: "<html><body>400 Filename is directory</body></html>"}
+    end
+  end
+  
+  def handle(%Request{http_method: :POST}) do
+    %Response{http_status: 400, body: "<html><body>To save file send filename param.</body></html>"}
+  end
+  
+  def handle(%Request{http_method: :PUT}) do
+    %Response{http_status: 400, body: "<html><body>To save file send filename param.</body></html>"}
+  end
   
   def handle(request) do
     IO.puts 'Default method'
@@ -80,14 +100,29 @@ defmodule Handlers do
     IO.inspect request.body
     %Response{http_status: 200, body: "<html><body>SimpleHTTPServer/0.0.1!</body></html>"}
   end
-
+  
   defp modified_since?(file_path, since) do
     since_date = since
-                  |> Utils.DateUtils.parse_date
+    |> Utils.DateUtils.parse_date
     file_path
     |> Utils.FileUtils.get_file_path
     |> Utils.FileUtils.get_file_modification_date
     |> Timex.before?(since_date) 
+  end
+
+  defp handle_save(%Request{http_method: http_method, path: path, params: %{"filename" => filename}, body: body}) do
+    file_path = path 
+                |> Utils.FileUtils.get_file_path
+    file_path
+    |> File.mkdir_p
+
+    write_params = case http_method do
+      :POST -> []
+      :PUT -> [:append]
+    end
+
+    "#{file_path}/#{filename}"
+    |> File.write(body, write_params)
   end
   
 end

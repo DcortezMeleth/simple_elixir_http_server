@@ -1,6 +1,6 @@
 defmodule BodyParser do
   
-  def get_body(%{:"Content-Lenght" => lenght}, socket) do
+  def get_body(%{:"Content-Length" => lenght}, socket) do
     len = List.to_integer(lenght)
     :inet.setopts(socket, [packet: :raw])
     :gen_tcp.recv(socket, len)
@@ -19,6 +19,5 @@ defmodule BodyParser do
   defp handle_body({:error, reason}) do
     IO.puts 'Error while reading message body! Reason: #{reason}'
   end
-
 
 end
