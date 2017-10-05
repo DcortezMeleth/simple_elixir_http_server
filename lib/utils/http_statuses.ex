@@ -16,7 +16,7 @@ defmodule Utils.HttpStatuses do
       '400 Bad Request\r\n'
   """  
   def get_status_by_code(status_code) do
-    '#{status_code} #{Map.get(status_codes, status_code)}\r\n'
+    '#{status_code} #{status_codes() |> Map.get(status_code)}\r\n'
   end
 
   defp status_codes do

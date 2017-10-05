@@ -25,12 +25,12 @@ defmodule MessageHandler do
     request = %Request{http_method: http_method, headers: headers, path: path, body: body, params: params}
 
     case request |> Validators.valid? do
-      {:done, true} ->
-        request
-        |> Handlers.handle
-        |> send_response(socket)
       {:halted, response} ->
         response
+        |> send_response(socket)
+      _ ->
+        request
+        |> Handlers.handle
         |> send_response(socket)
     end
   end
@@ -39,7 +39,10 @@ defmodule MessageHandler do
     IO.puts 'Sending response ...'
     http_version = 'HTTP/1.1'
     http_status = Utils.HttpStatuses.get_status_by_code(request.http_status)
-    headers_string = request.headers
+    headers_string = request.body
+                     |> String.length
+                     |> Utils.HeaderUtils.get_content_length_header
+                     |> Map.merge(request.headers)
                      |> Utils.HeaderUtils.merge_base_headers
                      |> Utils.HeaderUtils.headers_to_string
               #String.length(request.body)

@@ -10,21 +10,21 @@ defmodule Handlers do
         |> handle
       # File unmodified, returning 304
       true -> 
-        %Response{http_status: 304, body: "<html><body>304 Not Modifed</body></html>"}
+        %Response{http_status: 304}
     end
   end
   
   def handle(request = %Request{headers: %{:"If-Unmodified-Since" => since}}) do
     modified_since?(request.path, since)    
     |> case do
-      # File unmodified since `If-Modified-Since`, we handle request as normal
+      # File unmodified since `If-Umnodified-Since`, we handle request as normal
       true -> 
         new_headers = Map.delete(request.headers, :"If-Unmodified-Since")
         Map.put(request, :headers, new_headers)
         |> handle
-        # File modified, returning 304
+        # File modified, returning 412
       false -> 
-        %Response{http_status: 412, body: "<html><body>412 Precondition Failed!</body></html>"}
+        %Response{http_status: 412, body: "<html><body>412!</body></html>"}
     end
   end
 
@@ -37,11 +37,7 @@ defmodule Handlers do
                 |> Utils.FileUtils.get_file_modification_date
                 |> Timex.format!("{RFC1123}")
 
-        headers = content
-                  |> String.length
-                  |> Utils.HeaderUtils.get_content_length_header
-                  |> Map.merge(%{'Last-Modified' => mdate})
-        %Response{http_status: 200, headers: headers, body: content}
+        %Response{http_status: 200, headers: %{'Last-Modified' => mdate}, body: content}
       {:error, :eaccess} -> 
         %Response{http_status: 401, body: "<html><body>401 Unauthorized</body></html>"}
       {:error, :enoent} -> 
@@ -50,6 +46,28 @@ defmodule Handlers do
         %Response{http_status: 500, body: "<html><body>500 File too large</body></html>"}
       {:error, _} -> 
         %Response{http_status: 400, body: "<html><body>400 Bad Request</body></html>"}
+    end
+  end
+
+  def handle(%Request{http_method: :POST, path: path, params: %{"filename" => filename}, body: body}) do
+    file_path = path 
+                |> Utils.FileUtils.get_file_path
+    file_path
+    |> File.mkdir_p
+
+    "#{file_path}/#{filename}"
+    |> File.write(body)
+    |> case do
+      :ok ->
+        %Response{http_status: 201}
+      {:error, :eaccess} -> 
+        %Response{http_status: 401, body: "<html><body>401 Unauthorized</body></html>"}
+      {:error, :enoent} -> 
+        %Response{http_status: 400, body: "<html><body>400 Wrong Path</body></html>"}
+      {:error, :enospc} -> 
+        %Response{http_status: 500, body: "<html><body>500 No space left on drive</body></html>"}
+      {:error, :eisdir} -> 
+        %Response{http_status: 400, body: "<html><body>400 Filename is directory</body></html>"}
     end
   end
   
