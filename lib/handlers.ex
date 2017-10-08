@@ -101,11 +101,7 @@ defmodule Handlers do
     end
   end
   
-  def handle(%Request{http_method: :POST}) do
-    %Response{http_status: 400, body: "<html><body>To save file send filename param.</body></html>"}
-  end
-  
-  def handle(%Request{http_method: :PUT}) do
+  def handle(%Request{http_method: http_method}) when http_method == :POST or http_method == :PUT do
     %Response{http_status: 400, body: "<html><body>To save file send filename param.</body></html>"}
   end
   
