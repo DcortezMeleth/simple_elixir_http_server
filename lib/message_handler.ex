@@ -23,7 +23,7 @@ defmodule MessageHandler do
 
     body = BodyParser.get_body(headers, socket)
     request = %Request{http_method: http_method, headers: headers, path: path, body: body, params: params}
-
+    
     case request |> Validators.valid? do
       {:halted, response} ->
         response

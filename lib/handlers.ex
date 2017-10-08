@@ -49,6 +49,24 @@ defmodule Handlers do
     end
   end
 
+  def handle(%Request{http_method: :DELETE, path: path}) do
+    path
+    |> Utils.FileUtils.get_file_path
+    |> File.rm
+    |> case do
+      :ok ->
+        %Response{http_status: 204} 
+      {:error, :eaccess} -> 
+        %Response{http_status: 401, body: "<html><body>401 Unauthorized</body></html>"}
+      {:error, :eperm} 
+        %Response{http_status: 401, body: "<html><body>401 Unauthorized</body></html>"}
+      {:error, :enoent} ->
+        %Response{http_status: 404, body: "<html><body>404 Not Found</body></html>"}
+      {:error, _} -> 
+        %Response{http_status: 400, body: "<html><body>400 Bad Request</body></html>"}
+    end
+  end
+
   def handle(request = %Request{http_method: :POST, params: %{"filename" => _}}) do
     request
     |> handle_save
@@ -98,7 +116,7 @@ defmodule Handlers do
     IO.inspect request.headers
     IO.inspect request.params
     IO.inspect request.body
-    %Response{http_status: 200, body: "<html><body>SimpleHTTPServer/0.0.1!</body></html>"}
+    %Response{http_status: 200, body: "<html><body>Unsupported request type! SimpleHTTPServer/0.0.1!</body></html>"}
   end
   
   defp modified_since?(file_path, since) do

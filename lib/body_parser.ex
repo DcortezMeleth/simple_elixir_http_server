@@ -1,4 +1,8 @@
 defmodule BodyParser do
+
+  def get_body(%{:"Content-Length" => '0'}, _) do
+    ''
+  end
   
   def get_body(%{:"Content-Length" => lenght}, socket) do
     len = List.to_integer(lenght)
