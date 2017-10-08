@@ -1,10 +1,6 @@
 defmodule BodyParser do
-
-  def get_body(%{:"Content-Length" => '0'}, _) do
-    ''
-  end
-  
-  def get_body(%{:"Content-Length" => lenght}, socket) do
+ 
+  def get_body(%{:"Content-Length" => lenght}, socket) when lenght != '0' do
     len = List.to_integer(lenght)
     :inet.setopts(socket, [packet: :raw])
     :gen_tcp.recv(socket, len)
