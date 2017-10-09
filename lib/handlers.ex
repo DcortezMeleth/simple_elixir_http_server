@@ -52,13 +52,17 @@ defmodule Handlers do
   def handle(%Request{http_method: :HEAD, path: path}) do
     file_path = path 
                 |> Utils.FileUtils.get_file_path 
-    case file_path |> File.open do
-      {:ok, _} ->
+    case file_path |> File.read do
+      {:ok, content} ->
         mdate = file_path
                 |> Utils.FileUtils.get_file_modification_date
                 |> Timex.format!("{RFC1123}")
-
-        %Response{http_status: 200, headers: %{'Last-Modified' => mdate}}
+        
+        headers = content
+                  |> String.length
+                  |> Utils.HeaderUtils.get_content_length_header
+                  |> Map.merge(%{'Last-Modified' => mdate})
+        %Response{http_status: 200, headers: headers}
       {:error, :eaccess} -> 
         %Response{http_status: 401}
       {:error, :enoent} -> 
