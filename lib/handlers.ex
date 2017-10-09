@@ -49,6 +49,27 @@ defmodule Handlers do
     end
   end
 
+  def handle(%Request{http_method: :HEAD, path: path}) do
+    file_path = path 
+                |> Utils.FileUtils.get_file_path 
+    case file_path |> File.open do
+      {:ok, _} ->
+        mdate = file_path
+                |> Utils.FileUtils.get_file_modification_date
+                |> Timex.format!("{RFC1123}")
+
+        %Response{http_status: 200, headers: %{'Last-Modified' => mdate}}
+      {:error, :eaccess} -> 
+        %Response{http_status: 401}
+      {:error, :enoent} -> 
+        %Response{http_status: 404}
+      {:error, :enomem} -> 
+        %Response{http_status: 500}
+      {:error, _} -> 
+        %Response{http_status: 400}
+    end
+  end
+
   def handle(%Request{http_method: :DELETE, path: path}) do
     path
     |> Utils.FileUtils.get_file_path
