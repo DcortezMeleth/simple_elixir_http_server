@@ -29,6 +29,7 @@ defmodule Utils.HttpStatuses do
       404 => 'Not Found',
       411 => 'Length Required', 
       412 => 'Precondition Failed',
-      500 => 'Internal Error'}
+      500 => 'Internal Error',
+      501 => 'Not Implemented'}
   end
 end

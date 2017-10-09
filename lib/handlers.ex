@@ -130,14 +130,8 @@ defmodule Handlers do
     %Response{http_status: 400, body: "<html><body>To save file send filename param.</body></html>"}
   end
   
-  def handle(request) do
-    IO.puts 'Default method'
-    IO.inspect request.http_method
-    IO.inspect request.path
-    IO.inspect request.headers
-    IO.inspect request.params
-    IO.inspect request.body
-    %Response{http_status: 200, body: "<html><body>Unsupported request type! SimpleHTTPServer/0.0.1!</body></html>"}
+  def handle(_) do
+    %Response{http_status: 501, body: "<html><body>Not Implemented! SimpleHTTPServer/0.0.1!</body></html>"}
   end
   
   defp modified_since?(file_path, since) do
